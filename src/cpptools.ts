@@ -10,10 +10,16 @@ export class ReCppConfigurationProvider implements CustomConfigurationProvider {
     private configs = new Map<string, any>();
     private configKeys: string[] = []
 
-    constructor() {
-        const data = JSON.parse(readFileSync(vscode.workspace.workspaceFolders![0].uri.fsPath + '/re-meta.json', { encoding: 'utf-8' }));
+    rootTarget?: string;
+    dataLoaded: boolean = false;
 
-        this.configKeys = Object.keys(data).sort((a, b) => {
+    loadMeta(metaPath: string) {        
+        const data = JSON.parse(readFileSync(metaPath, { encoding: 'utf-8' }));
+
+        const rootTarget = data["root_target"];
+        const targets = data["targets"];
+
+        this.configKeys = Object.keys(targets).sort((a, b) => {
             if (a.length < b.length)
                 return 1;
             else if (a.length > b.length)
@@ -22,11 +28,15 @@ export class ReCppConfigurationProvider implements CustomConfigurationProvider {
                 return 0;
         });
 
-        console.log(this.configKeys);
+        // console.log(this.configKeys);
 
-        for (const [key, value] of Object.entries(data)) {
+        this.configs.clear();
+        for (const [key, value] of Object.entries(targets)) {
             this.configs.set(key, value);
         }
+
+        this.rootTarget = rootTarget;
+        this.dataLoaded = true;
     }
 
     async canProvideConfiguration(uri: vscode.Uri, token?: vscode.CancellationToken) {

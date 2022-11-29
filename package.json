@@ -2,7 +2,7 @@
   "name": "re-build-tools",
   "displayName": "Re Build Tools",
   "description": "Support for Re projects in Visual Studio Code",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.73.0"
   },
@@ -45,5 +45,6 @@
   },
   "dependencies": {
     "vscode-cpptools": "^6.1.0"
-  }
+  },
+  "repository": "https://github.com/osdeverr/re-build-tools"
 }

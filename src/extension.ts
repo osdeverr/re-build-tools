@@ -6,36 +6,112 @@ import { CppToolsApi, Version, getCppToolsApi } from 'vscode-cpptools';
 
 import { ReCppConfigurationProvider } from './cpptools';
 
-const reConfigProvider = new ReCppConfigurationProvider();
+import { execSync } from 'child_process';
+
+class ExtensionManager {    
+    readonly api: CppToolsApi;
+    readonly provider = new ReCppConfigurationProvider();
+
+    private registered: boolean = false;
+    
+    constructor(api: CppToolsApi) {
+        this.api = api;
+    }
+
+    notifyCppToolsMetaLoaded() {
+        if (!this.registered) {
+            const api = this.api;
+
+            if (api.notifyReady) {
+                // Inform cpptools that a custom config provider will be able to service the current workspace.
+                api.registerCustomConfigurationProvider(this.provider);
+
+                // Do any required setup that the provider needs.
+
+                // Notify cpptools that the provider is ready to provide IntelliSense configurations.
+                api.notifyReady(this.provider);
+            } else {
+                // Running on a version of cpptools that doesn't support v2 yet.
+
+                // Do any required setup that the provider needs.
+
+                // Inform cpptools that a custom config provider will be able to service the current workspace.
+                api.registerCustomConfigurationProvider(this.provider);
+                api.didChangeCustomConfiguration(this.provider);
+            }
+        }
+        else {            
+            this.api.didChangeCustomConfiguration(this.provider);
+        }
+    }
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "re-build-tools" is now active!');
 	
 	let api: CppToolsApi | undefined = await getCppToolsApi(Version.latest);
 	
     if (api) {
-        if (api.notifyReady) {
-            // Inform cpptools that a custom config provider will be able to service the current workspace.
-            api.registerCustomConfigurationProvider(reConfigProvider);
+        const manager = new ExtensionManager(api);
+        
+        const codePath = vscode.workspace.workspaceFolders![0].uri.fsPath;
+        const metaPath = codePath + '/.re-cache/meta/full.json';
 
-            // Do any required setup that the provider needs.
+        const loadMeta = () => {
+            try {
+                const firstTime = !manager.provider.dataLoaded;
+                manager.provider.loadMeta(metaPath);
 
-            // Notify cpptools that the provider is ready to provide IntelliSense configurations.
-            api.notifyReady(reConfigProvider);
-        } else {
-            // Running on a version of cpptools that doesn't support v2 yet.
-            
-            // Do any required setup that the provider needs.
+                if (firstTime)
+                    vscode.window.showInformationMessage('Loaded Re metadata for project ' + manager.provider.rootTarget!);
+                else
+                    vscode.window.showInformationMessage('Reloaded Re metadata for project ' + manager.provider.rootTarget!);
+            }
+            catch (e: any) {                
+                vscode.window.showErrorMessage(`Failed to load Re metadata for the current workspace:\n  ${e.toString()}`);
+            }
 
-            // Inform cpptools that a custom config provider will be able to service the current workspace.
-            api.registerCustomConfigurationProvider(reConfigProvider);
-            api.didChangeCustomConfiguration(reConfigProvider);
-        }
+            manager.notifyCppToolsMetaLoaded();
+        };
+
+        const regenerateMeta = async (params = 'cached-only') => {
+            try {
+                execSync(`re-tool-build meta "${codePath}" ${params}`);
+            } catch (error: any) {
+                if (error.status == 5) {
+                    const response = await vscode.window.showWarningMessage(
+                        'The Re target has uncached dependencies that may take a while to load.',
+                        'Run Anyway'
+                    );
+
+                    if (response != undefined) {
+                        vscode.window.showInformationMessage('Generating Re metadata [uncached included]...');
+                        await regenerateMeta('');
+                    }
+                }
+                else {
+                    vscode.window.showErrorMessage('Failed to generate Re metadata:\n    ' + error.message);
+                }
+            }
+        };
+
+        await regenerateMeta();
+        
+        let metaWatcher = vscode.workspace.createFileSystemWatcher(metaPath);
+        
+        metaWatcher.onDidCreate((_) => loadMeta());
+        metaWatcher.onDidChange((_) => loadMeta());
+
+        let reYmlWatcher = vscode.workspace.createFileSystemWatcher('**/re.yml');
+
+        reYmlWatcher.onDidChange(async (_) => await regenerateMeta());
+        reYmlWatcher.onDidCreate(async (_) => await regenerateMeta());
+        reYmlWatcher.onDidDelete(async (_) => await regenerateMeta());
+        
+        context.subscriptions.push(reYmlWatcher);
+        context.subscriptions.push(metaWatcher);
+        context.subscriptions.push(api);
     }
     // Dispose of the 'api' in your extension's deactivate() method, or whenever you want to unregister the provider.
 
