@@ -7,8 +7,8 @@ export class ReCppConfigurationProvider implements CustomConfigurationProvider {
     readonly name = 'Re Build Tools';
     readonly extensionId = 're.build-tools';
 
-    private configs = new Map<string, any>();
-    private configKeys: string[] = []
+    configs = new Map<string, any>();
+    configKeys: string[] = []
 
     rootTarget?: string;
     dataLoaded: boolean = false;
@@ -74,6 +74,8 @@ export class ReCppConfigurationProvider implements CustomConfigurationProvider {
                     continue;
 
                 console.log(`found meta for uri ${uri.fsPath}: re module ${meta.module}`)
+
+                // console.log(`    ${JSON.stringify(cxx)}`)
             
                 const configuration: SourceFileConfiguration = {
                     includePath: cxx['include_dirs'],

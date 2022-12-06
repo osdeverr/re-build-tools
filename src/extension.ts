@@ -77,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const regenerateMeta = async (params = 'cached-only') => {
             try {
-                execSync(`re-tool-build meta "${codePath}" ${params}`);
+                execSync(`re meta "${codePath}" ${params} --colors off`);
             } catch (error: any) {
                 if (error.status == 5) {
                     const response = await vscode.window.showWarningMessage(
@@ -105,12 +105,38 @@ export async function activate(context: vscode.ExtensionContext) {
 
         let reYmlWatcher = vscode.workspace.createFileSystemWatcher('**/re.yml');
 
-        reYmlWatcher.onDidChange(async (_) => await regenerateMeta());
-        reYmlWatcher.onDidCreate(async (_) => await regenerateMeta());
-        reYmlWatcher.onDidDelete(async (_) => await regenerateMeta());
+        const regenerateMetaCallback = async (_: vscode.Uri) => await regenerateMeta();
+
+        reYmlWatcher.onDidChange(regenerateMetaCallback);
+        reYmlWatcher.onDidCreate(regenerateMetaCallback);
+        reYmlWatcher.onDidDelete(regenerateMetaCallback);
         
+        let reConfigWatcher = vscode.workspace.createFileSystemWatcher('**/re.user.yml');
+
+        reConfigWatcher.onDidChange(regenerateMetaCallback);
+        reConfigWatcher.onDidCreate(regenerateMetaCallback);
+        reConfigWatcher.onDidDelete(regenerateMetaCallback);
+
+        var type = "re-build-tools";
+
+        vscode.tasks.registerTaskProvider(type, {
+            provideTasks() {
+                var execution = new vscode.ShellExecution("echo \"Hello World\"");
+                var problemMatchers = ["$myProblemMatcher"];
+                return [
+                    new vscode.Task({type: type}, vscode.TaskScope.Workspace,
+                        "Build", "re-build-tools", execution, problemMatchers)
+                ];
+            },
+            resolveTask(task: vscode.Task, token?: vscode.CancellationToken) {
+                return task;
+            }
+        });
+        
+        context.subscriptions.push(reConfigWatcher);
         context.subscriptions.push(reYmlWatcher);
         context.subscriptions.push(metaWatcher);
+
         context.subscriptions.push(api);
     }
     // Dispose of the 'api' in your extension's deactivate() method, or whenever you want to unregister the provider.

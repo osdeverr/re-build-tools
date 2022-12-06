@@ -2,16 +2,17 @@
   "name": "re-build-tools",
   "displayName": "Re Build Tools",
   "description": "Support for Re projects in Visual Studio Code",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "engines": {
-    "vscode": "^1.73.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [
     "onCommand:re-build-tools.helloWorld",
-    "workspaceContains:**/re.yml"
+    "workspaceContains:**/re.yml",
+    "onCommand:workbench.action.tasks.runTask"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -19,6 +20,11 @@
       {
         "command": "re-build-tools.helloWorld",
         "title": "Hello World"
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "re-build-tools"
       }
     ]
   },
