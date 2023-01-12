@@ -26,6 +26,18 @@
       {
         "type": "re-build-tools"
       }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "re.json",
+        "url": "https://raw.githubusercontent.com/osdeverr/rebs/main/meta/re-target.schema.json"
+      }
+    ],
+    "yamlValidation": [
+      {
+        "fileMatch": "re.yml",
+        "url": "https://raw.githubusercontent.com/osdeverr/rebs/main/meta/re-target.schema.json"
+      }
     ]
   },
   "scripts": {
