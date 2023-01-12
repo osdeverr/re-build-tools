@@ -18,6 +18,8 @@ jobs:
         with:
           node-version: 16
 
+      - run: npm install
+
       - id: create-package
         name: Create package
         uses: HaaLeo/publish-vscode-extension@v1
