@@ -1,0 +1,38 @@
+name: extension
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout latest sources
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - id: create-package
+        name: Create package
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          dryRun: true
+          pat: 'nothing'
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: re-build-tools-${{ github.ref_name }}
+          path: ${{ steps.create-package.outputs.vsixPath }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.create-package.outputs.vsixPath }}
+        
