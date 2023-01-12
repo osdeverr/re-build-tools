@@ -6,7 +6,7 @@
 
 It provides support for IntelliSense syntax highlighting, proper include resolution, Ctrl+clicking symbols to go to their definitions and much more.
 
-- **[Download latest release (.vsix)](/releases/latest)**
+- **[Download latest release (.vsix)](https://github.com/osdeverr/re-build-tools/releases/latest)**
 
 ## Usage
 
