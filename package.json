@@ -2,7 +2,7 @@
   "name": "re-build-tools",
   "displayName": "Re Build Tools",
   "description": "Support for Re projects in Visual Studio Code",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.70.0"
   },
