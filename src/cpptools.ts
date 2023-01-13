@@ -75,14 +75,16 @@ export class ReCppConfigurationProvider implements CustomConfigurationProvider {
 
                 console.log(`found meta for uri ${uri.fsPath}: re module ${meta.module}`)
 
-                // console.log(`    ${JSON.stringify(cxx)}`)
+                console.log(`    ${JSON.stringify(cxx)}`)
             
                 const configuration: SourceFileConfiguration = {
                     includePath: cxx['include_dirs'],
                     defines: cxx['definitions'],
                     standard: cxx['standard'] == 'c++latest' ? 'c++20' : cxx['standard'],
-                    compilerPath: cxx.tools?.compiler
+                    compilerPath: meta.tools?.compiler
                 };
+
+                console.log(`    ${JSON.stringify(configuration)}`);
 
                 arr.push({
                     uri: uri,
