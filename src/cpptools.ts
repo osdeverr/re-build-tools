@@ -81,7 +81,7 @@ export class ReCppConfigurationProvider implements CustomConfigurationProvider {
                     includePath: cxx['include_dirs'],
                     defines: cxx['definitions'],
                     standard: cxx['standard'] == 'c++latest' ? 'c++20' : cxx['standard'],
-                    compilerPath: cxx['tools']['compiler']
+                    compilerPath: cxx.tools?.compiler
                 };
 
                 arr.push({
